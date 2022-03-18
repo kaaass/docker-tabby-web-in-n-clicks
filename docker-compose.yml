@@ -1,0 +1,38 @@
+services:
+  tabby:
+    image: 'ghcr.io/eugeny/tabby-web'
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - 9090:80
+    volumes:
+      - ./data/app-dist:/app-dist
+      - ./data/db:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/tabby.sql
+      - PORT=80
+      - ENABLE_HOMEPAGE=False
+      - DEBUG=False
+      - APP_DIST_STORAGE=file:///app-dist
+      # - DOCKERIZE_ARGS="-wait tcp://db:3306 -timeout 60s"
+      - SOCIAL_AUTH_GITHUB_KEY=$SOCIAL_AUTH_GITHUB_KEY
+      - SOCIAL_AUTH_GITHUB_SECRET=$SOCIAL_AUTH_GITHUB_SECRET
+
+  #db:
+    #image: mariadb:10.7.1
+    #restart: always
+    #environment:
+      #- MARIADB_DATABASE=tabby
+      #- MARIADB_USER=user
+      #- MARIADB_PASSWORD=123
+      #- MYSQL_ROOT_PASSWORD=123
+
+  connection-gateway:
+    image: 'ghcr.io/eugeny/tabby-connection-gateway'
+    restart: always
+    entrypoint: 'python -m tabby_connection_gateway.cli --token-auth --host 0.0.0.0'
+    environment:
+      - TABBY_AUTH_TOKEN=$TABBY_AUTH_TOKEN
+    ports:
+      - 9000:9000
